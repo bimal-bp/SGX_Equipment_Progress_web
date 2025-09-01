@@ -315,6 +315,17 @@
         .stock-value {
             font-weight: bold;
         }
+        .diesel-price-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .diesel-price-item {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
@@ -328,12 +339,9 @@
             <h2>Current Equipment Status</h2>
             <div class="status-grid">
                 <div class="status-card">
-                    <h3>Fuel Status</h3>
-                    <div class="status-item">Current Stock (Liters): <strong id="current-fuel-stock">12,500</strong></div>
+                    <h3>Fuel & Tire Status</h3>
+                    <div class="status-item">Current Diesel Stock: <strong id="current-fuel-stock">12,500</strong> Liters</div>
                     <div class="status-item">Last Refill: <strong>2025-08-10</strong></div>
-                </div>
-                <div class="status-card">
-                    <h3>Tire Status</h3>
                     <div class="status-item">Tires in Stock: <strong id="current-tire-stock">8</strong></div>
                     <div class="status-item">Puncture Repairs Today: <strong id="puncture-count">0</strong></div>
                 </div>
@@ -381,7 +389,7 @@
                         <span class="stock-value"><input type="number" id="tire-opening-stock" value="8"></span>
                     </div>
                     <div class="stock-item">
-                        <span>Issued Today:</</span>
+                        <span>Issued Today:</span>
                         <span class="stock-value" id="tire-issued-today">0</span>
                     </div>
                     <div class="stock-item">
@@ -395,7 +403,25 @@
                         <span>Price per Liter (₹):</span>
                         <span class="stock-value"><input type="number" step="0.01" id="diesel-price" value="96.23"></span>
                     </div>
-                    <div class="stock-item">
+                    <div class="diesel-price-grid">
+                        <div class="diesel-price-item">
+                            <div>Tipper Diesel Cost:</div>
+                            <div id="tipper-diesel-cost">₹0.00</div>
+                        </div>
+                        <div class="diesel-price-item">
+                            <div>Excavator/Loader Diesel Cost:</div>
+                            <div id="excavator-diesel-cost">₹0.00</div>
+                        </div>
+                        <div class="diesel-price-item">
+                            <div>Bolero/Scorpio Diesel Cost:</div>
+                            <div id="bolero-diesel-cost">₹0.00</div>
+                        </div>
+                        <div class="diesel-price-item">
+                            <div>Barrel Stock Cost:</div>
+                            <div id="barrel-diesel-cost">₹0.00</div>
+                        </div>
+                    </div>
+                    <div class="stock-item" style="margin-top: 10px; border-top: 1px solid #ddd; padding-top: 10px;">
                         <span>Total Diesel Cost (₹):</span>
                         <span class="stock-value" id="total-diesel-cost">₹0.00</span>
                     </div>
@@ -592,7 +618,7 @@
                 <h3>Diesel Summary</h3>
                 <div class="cost-item">
                     <span>Total Quantity:</span>
-                    <span class="cost-value" id="diesel-total-qty">0 Liters</span>
+                    <span class="cost-value" id="diesel-total-qty">0.0 Liters</span>
                 </div>
                 <div class="cost-item">
                     <span>Total Cost:</span>
@@ -603,7 +629,7 @@
                 <h3>Petrol Summary</h3>
                 <div class="cost-item">
                     <span>Total Quantity:</span>
-                    <span class="cost-value" id="petrol-total-qty">0 Liters</span>
+                    <span class="cost-value" id="petrol-total-qty">0.0 Liters</span>
                 </div>
                 <div class="cost-item">
                     <span>Total Cost:</span>
@@ -834,11 +860,41 @@
             saveToLocalStorage();
         }
 
-        // Function to update diesel cost calculation
+        // Function to update diesel cost calculation with breakdown
         function updateDieselCost() {
-            const dieselQtyTotal = parseFloat(document.getElementById('diesel-total-qty').textContent) || 0;
             const dieselPrice = parseFloat(document.getElementById('diesel-price').value) || 96.23;
-            const totalDieselCost = dieselQtyTotal * dieselPrice;
+            
+            // Calculate tipper diesel cost
+            let tipperDieselQty = 0;
+            document.querySelectorAll('input[name^="diesel_qty_AP39UQ"]').forEach(input => {
+                tipperDieselQty += parseFloat(input.value) || 0;
+            });
+            const tipperDieselCost = tipperDieselQty * dieselPrice;
+            document.getElementById('tipper-diesel-cost').textContent = `₹${tipperDieselCost.toFixed(2)}`;
+            
+            // Calculate excavator/loader diesel cost
+            let excavatorDieselQty = 0;
+            document.querySelectorAll('input[name^="diesel_qty_AP39NM"]').forEach(input => {
+                excavatorDieselQty += parseFloat(input.value) || 0;
+            });
+            const excavatorDieselCost = excavatorDieselQty * dieselPrice;
+            document.getElementById('excavator-diesel-cost').textContent = `₹${excavatorDieselCost.toFixed(2)}`;
+            
+            // Calculate bolero/scorpio diesel cost
+            let boleroDieselQty = 0;
+            document.querySelectorAll('input[name^="diesel_qty_AP39TM"]').forEach(input => {
+                boleroDieselQty += parseFloat(input.value) || 0;
+            });
+            const boleroDieselCost = boleroDieselQty * dieselPrice;
+            document.getElementById('bolero-diesel-cost').textContent = `₹${boleroDieselCost.toFixed(2)}`;
+            
+            // Calculate barrel stock cost
+            const dieselBarrel = parseFloat(document.getElementById('diesel-barrel-stock').value) || 0;
+            const barrelDieselCost = dieselBarrel * dieselPrice;
+            document.getElementById('barrel-diesel-cost').textContent = `₹${barrelDieselCost.toFixed(2)}`;
+            
+            // Calculate total diesel cost
+            const totalDieselCost = tipperDieselCost + excavatorDieselCost + boleroDieselCost + barrelDieselCost;
             document.getElementById('total-diesel-cost').textContent = `₹${totalDieselCost.toFixed(2)}`;
             document.getElementById('diesel-total-cost').textContent = `₹${totalDieselCost.toFixed(2)}`;
         }
@@ -849,7 +905,7 @@
             let dieselQtyTotal = 0;
             
             document.querySelectorAll('input[name$="_qty_"]').forEach(input => {
-                if (input.name.includes('diesel') || input.name.includes('petrol')) {
+                if (input.name.includes('diesel')) {
                     const value = parseFloat(input.value) || 0;
                     dieselQtyTotal += value;
                 }
@@ -917,7 +973,7 @@
             const dieselClosing = Math.max(0, dieselOpening - dieselIssued + dieselBarrel);
             
             document.getElementById('diesel-closing-stock').textContent = dieselClosing.toFixed(1);
-            document.getElementById('current-fuel-stock').textContent = dieselClosing.toFixed(1);
+            document.getElementById('current-fuel-stock').textContent = dieselClosing.toLocaleString();
             
             const tireOpening = parseInt(document.getElementById('tire-opening-stock').value) || 0;
             const tireIssued = parseInt(document.getElementById('tire-issued-today').textContent) || 0;
@@ -1056,6 +1112,11 @@
             loadFromLocalStorage();
             renderPaymentTable();
             updateAllCalculations();
+            
+            // Set today's date as default for new payments
+            const today = new Date();
+            const formattedDate = today.toISOString().substr(0, 10);
+            document.getElementById('newPaymentDate').value = formattedDate;
         };
     </script>
 </body>
